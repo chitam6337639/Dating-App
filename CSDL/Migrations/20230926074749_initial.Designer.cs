@@ -12,17 +12,58 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CSDL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230919044237_initial")]
+    [Migration("20230926074749_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.6")
+                .HasAnnotation("ProductVersion", "6.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
+
+            modelBuilder.Entity("CSDL.Models.Account", b =>
+                {
+                    b.Property<int>("accountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("accountId"), 1L, 1);
+
+                    b.Property<DateTime?>("ResetTokenExpires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("passwordHash")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("passwordResetToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("passwordSalt")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("verificationToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("verifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("accountId");
+
+                    b.ToTable("Accounts");
+                });
 
             modelBuilder.Entity("CSDL.Models.History", b =>
                 {
@@ -143,25 +184,32 @@ namespace CSDL.Migrations
                     b.Property<string>("ImageURL")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("accountId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
                     b.Property<string>("bio")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("birthday")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("email")
-                        .IsRequired()
+                    b.Property<string>("firstName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("gender")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("password")
-                        .IsRequired()
+                    b.Property<string>("lastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("location")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("userId");
+
+                    b.HasIndex("accountId");
 
                     b.ToTable("Users");
                 });
@@ -232,6 +280,17 @@ namespace CSDL.Migrations
                     b.Navigation("UserFrom");
 
                     b.Navigation("UserTo");
+                });
+
+            modelBuilder.Entity("CSDL.Models.User", b =>
+                {
+                    b.HasOne("CSDL.Models.Account", "Account")
+                        .WithMany()
+                        .HasForeignKey("accountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
                 });
 
             modelBuilder.Entity("CSDL.Models.User", b =>

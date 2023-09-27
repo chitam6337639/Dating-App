@@ -10,21 +10,49 @@ namespace CSDL.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Accounts",
+                columns: table => new
+                {
+                    accountId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    passwordHash = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    passwordSalt = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    verificationToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    verifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    passwordResetToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ResetTokenExpires = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Accounts", x => x.accountId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
                     userId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     gender = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ImageURL = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     bio = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    birthday = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    birthday = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    lastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    firstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    location = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    accountId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.userId);
+                    table.ForeignKey(
+                        name: "FK_Users_Accounts_accountId",
+                        column: x => x.accountId,
+                        principalTable: "Accounts",
+                        principalColumn: "accountId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -165,6 +193,11 @@ namespace CSDL.Migrations
                 name: "IX_Messages_UserIdTo",
                 table: "Messages",
                 column: "UserIdTo");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_accountId",
+                table: "Users",
+                column: "accountId");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -183,6 +216,9 @@ namespace CSDL.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Accounts");
         }
     }
 }

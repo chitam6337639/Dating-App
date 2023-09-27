@@ -3,10 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 
 namespace CSDL.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase
@@ -16,6 +17,151 @@ namespace CSDL.Controllers
         public UsersController(ApplicationDbContext context)
         {
             _context = context;
+        }
+        [HttpPost("register")]
+        public async Task<IActionResult> Register(UserRegister request)
+        {
+            if(_context.Accounts.Any(u =>u.email == request.email)) 
+            {
+                return BadRequest("User already exists. ");
+            }
+            CreatePasswordHash(request.password,
+                 out byte[] passwordHash,
+                 out byte[] passwordSalt);
+
+            var Account = new Account
+            {
+                email = request.email,
+                passwordHash = passwordHash,
+                passwordSalt = passwordSalt,
+                verificationToken = CreateRandomToken(),
+                status = "newUser"
+            };
+
+            _context.Accounts.Add(Account);
+            await _context.SaveChangesAsync();
+
+            return Ok("User successfully created!");
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login(UserLogin request)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.email == request.email);
+            if (account == null)
+            {
+                return BadRequest("User not found.");
+            }
+
+            if (!VerifyPasswordHash(request.password, account.passwordHash, account.passwordSalt))
+            {
+                return BadRequest("Password is incorrect.");
+            }
+
+            if (account.verifiedAt == null)
+            {
+                return BadRequest("Not verified!");
+            }
+
+            return Ok($"Welcome back, {account.email}! :)");
+        }
+
+        [HttpPost("verify")]
+        public async Task<IActionResult> Verify(string token)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.verificationToken == token);
+            if (account == null)
+            {
+                return BadRequest("Invalid token.");
+            }
+
+            account.verifiedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Ok("User verified! :)");
+        }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(string email)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.email == email);
+            if (account == null)
+            {
+                return BadRequest("User not found.");
+            }
+
+            account.passwordResetToken = CreateRandomToken();
+            account.ResetTokenExpires = DateTime.Now.AddDays(1);
+            await _context.SaveChangesAsync();
+
+            return Ok("You may now reset your password.");
+        }
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResettPassword(ResetPassword request)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.passwordResetToken == request.token);
+            if (account == null || account.ResetTokenExpires < DateTime.Now)
+            {
+                return BadRequest("Invalid Token.");
+            }
+
+            CreatePasswordHash(request.password, out byte[] passwordHash, out byte[] passwordSalt);
+
+            account.passwordHash = passwordHash;
+            account.passwordSalt = passwordSalt;
+            account.passwordResetToken = null;
+            account.ResetTokenExpires = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok("Password successfully reset.");
+        }
+
+        [HttpPost("create-user")]
+        public async Task<IActionResult> CreateUser(CreateUser user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var newUser = new User
+            {
+                accountId = user.accountId,
+                gender = user.gender,
+                lastName = user.lastName,
+                firstName = user.firstName,
+                birthday = user.birthday,
+                location = user.location
+                // Assign other properties as needed
+            };
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction("CreateUser", new { id = newUser.userId }, user);
+        }
+
+        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512(passwordSalt))
+            {
+                var computedHash = hmac
+                    .ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+                return computedHash.SequenceEqual(passwordHash);
+            }
+        }
+        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+        {
+            using (var hmac = new HMACSHA512())
+            {
+                passwordSalt = hmac.Key;
+                passwordHash = hmac
+                    .ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+            }
+        }
+        private string CreateRandomToken()
+        {
+            return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
         }
 
         // GET: api/Users
@@ -111,6 +257,7 @@ namespace CSDL.Controllers
         {
             return _context.Users.Any(e => e.userId == id);
         }
+
     }
 
 
