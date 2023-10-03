@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Common;
 using System.Security.Cryptography;
 
 namespace CSDL.Controllers
@@ -62,8 +63,23 @@ namespace CSDL.Controllers
             {
                 return BadRequest("Not verified!");
             }
+            var user = await _context.Users
+        .Where(u => u.accountId == account.accountId)
+        .Select(u => new
+        {
+            u.userId,
+            u.gender,
+            u.ImageURL,
+            u.bio,
+            u.birthday,
+            u.lastName,
+            u.firstName,
+            u.location
+        })
+        .FirstOrDefaultAsync();
 
-            return Ok($"Welcome back, {account.email}! :)");
+            //return Ok($"Welcome back, {account.email}! :)");
+            return Ok(user);
         }
 
         [HttpPost("verify")]
@@ -141,6 +157,100 @@ namespace CSDL.Controllers
             return CreatedAtAction("CreateUser", new { id = newUser.userId }, user);
         }
 
+        [HttpPut("update-image-url/{id}")]
+        public async Task<IActionResult> UpdateImageUrl(int id, [FromBody] string imageUrl)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            user.ImageURL = imageUrl;
+            await _context.SaveChangesAsync();
+
+            return Ok("Image URL updated successfully.");
+        }
+
+        [HttpPut("update-bio/{id}")]
+        public async Task<IActionResult> UpdateBio(int id, [FromBody] string bio)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            user.bio = bio;
+            await _context.SaveChangesAsync();
+
+            return Ok("Bio updated successfully.");
+        }
+
+        [HttpPut("update-user/{id}")]
+        public async Task<IActionResult> UpdateInfoUser(int id, UserInfo updatedUser)
+        {
+            if (id != updatedUser.userId)
+            {
+                return BadRequest();
+            }
+
+            var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.userId == id);
+
+            if (existingUser == null)
+            {
+                return NotFound();
+            }
+
+            // Cập nhật thông tin người dùng
+            existingUser.gender = updatedUser.gender;
+            existingUser.birthday = updatedUser.birthday;
+            existingUser.lastName = updatedUser.lastName;
+            existingUser.firstName = updatedUser.firstName;
+            existingUser.location = updatedUser.location;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!UserExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        [HttpGet("randomusers")]
+        public async Task<IActionResult> GetRandomUsers()
+        {
+            // Sử dụng hàm NEWID() trong truy vấn SQL để lấy ngẫu nhiên
+            var randomUsers = await _context.Users
+                .OrderBy(u => Guid.NewGuid())
+                .Take(3)
+                .ToListAsync();
+
+            return Ok(randomUsers);
+        }
+
+
+        private bool UserExists(int id)
+        {
+            return _context.Users.Any(e => e.userId == id);
+        }
+
+
+
+
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
         {
             using (var hmac = new HMACSHA512(passwordSalt))
@@ -164,99 +274,12 @@ namespace CSDL.Controllers
             return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
         }
 
-        // GET: api/Users
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<User>>> GetUsers()
-        {
-            var users = await _context.Users
-                .Include(u => u.Histories)
-                .Include(u => u.Images)
-                .Include(u => u.Matches)
-                .Include(u => u.Messages)
-                .ToListAsync();
 
-            if (users == null || users.Count == 0)
-            {
-                return NotFound();
-            }
-            Console.WriteLine(Ok(users));
-            return Ok(users);
-        }
 
-        // GET: api/Users/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
 
-            if (user == null)
-            {
-                return NotFound();
-            }
-            Console.WriteLine(user);
-            return user;
-        }
 
-        // POST: api/Users
-        [HttpPost]
-        public async Task<ActionResult<User>> PostUser(User user)
-        {
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetUser", new { id = user.userId }, user);
-        }
-
-        // PUT: api/Users/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutUser(int id, User user)
-        {
-            if (id != user.userId)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(user).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!UserExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // DELETE: api/Users/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool UserExists(int id)
-        {
-            return _context.Users.Any(e => e.userId == id);
-        }
+      
 
     }
 
