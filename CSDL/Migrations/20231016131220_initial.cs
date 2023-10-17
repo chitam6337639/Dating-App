@@ -42,6 +42,7 @@ namespace CSDL.Migrations
                     lastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     firstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     location = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    accessToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     accountId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -132,6 +133,33 @@ namespace CSDL.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Relations",
+                columns: table => new
+                {
+                    relationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserID = table.Column<int>(type: "int", nullable: false),
+                    OtherUserId = table.Column<int>(type: "int", nullable: false),
+                    isLike = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Relations", x => x.relationId);
+                    table.ForeignKey(
+                        name: "FK_Relations_Users_OtherUserId",
+                        column: x => x.OtherUserId,
+                        principalTable: "Users",
+                        principalColumn: "userId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Relations_Users_UserID",
+                        column: x => x.UserID,
+                        principalTable: "Users",
+                        principalColumn: "userId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Histories",
                 columns: table => new
                 {
@@ -195,6 +223,16 @@ namespace CSDL.Migrations
                 column: "UserIdTo");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Relations_OtherUserId",
+                table: "Relations",
+                column: "OtherUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Relations_UserID",
+                table: "Relations",
+                column: "UserID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Users_accountId",
                 table: "Users",
                 column: "accountId");
@@ -210,6 +248,9 @@ namespace CSDL.Migrations
 
             migrationBuilder.DropTable(
                 name: "Messages");
+
+            migrationBuilder.DropTable(
+                name: "Relations");
 
             migrationBuilder.DropTable(
                 name: "Matches");

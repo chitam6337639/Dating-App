@@ -1,12 +1,12 @@
-﻿//using AuthenticationAndAuthorization.AppModel;
-//using AuthenticationAndAuthorization.DBModels;
-//using CSDL.AppModel;
+﻿//using CSDL.DTO;
 //using CSDL.Models;
 //using Microsoft.AspNetCore.Http;
 //using Microsoft.AspNetCore.Mvc;
+//using Microsoft.EntityFrameworkCore;
 //using Microsoft.IdentityModel.Tokens;
 //using System.IdentityModel.Tokens.Jwt;
 //using System.Security.Claims;
+//using System.Security.Cryptography;
 //using System.Text;
 
 //namespace AuthenticationAndAuthorization.Controllers
@@ -26,184 +26,171 @@
 
 
 
-//        [HttpPost]
-//        [Route("PostLoginDetails")]
-//        public async Task<IActionResult> PostLoginDetails(String email, String password)
-//        {   
-//            if (email != null && password !=null)
+//        [HttpPost("register")]
+//        public async Task<IActionResult> Register(UserRegister request)
+//        {
+//            if (_context.Accounts.Any(u => u.email == request.email))
 //            {
-//                var resultLoginCheck = _context.Accounts
-//                    .Where(e => e.email == email && e.password == password)
-//                    .FirstOrDefault();
-//                if (resultLoginCheck == null)
-//                {
-//                    return BadRequest("Invalid Credentials");
-//                }
-//                else
-//                {
+//                return BadRequest("User already exists. ");
+//            }
+//            CreatePasswordHash(request.password,
+//                 out byte[] passwordHash,
+//                 out byte[] passwordSalt);
 
-//                    var claims = new[] {
+//            var Account = new Account
+//            {
+//                email = request.email,
+//                passwordHash = passwordHash,
+//                passwordSalt = passwordSalt,
+//                verificationToken = CreateRandomToken(),
+//                status = "newUser"
+//            };
+
+//            _context.Accounts.Add(Account);
+//            await _context.SaveChangesAsync();
+
+//            return Ok("User successfully created!");
+//        }
+
+//        [HttpPost("login")]
+//        public async Task<IActionResult> Login(UserLogin request)
+//        {
+//            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.email == request.email);
+//            if (account == null)
+//            {
+//                return BadRequest("User not found.");
+//            }
+
+//            if (!VerifyPasswordHash(request.password, account.passwordHash, account.passwordSalt))
+//            {
+//                return BadRequest("Password is incorrect.");
+//            }
+
+//            if (account.verifiedAt == null)
+//            {
+//                return BadRequest("Not verified!");
+//            }
+//            var user = await _context.Users
+//            .Where(u => u.accountId == account.accountId)
+//            .Select(u => new
+//            {
+//                u.userId,
+//                u.gender,
+//                u.ImageURL,
+//                u.bio,
+//                u.birthday,
+//                u.lastName,
+//                u.firstName,
+//                u.location,
+
+//            })
+//            .FirstOrDefaultAsync();
+
+//            //return Ok($"Welcome back, {account.email}! :)");
+//            return Ok(user);
+//        }
+
+//        public string getToken(User userData)
+//        {
+//            var claims = new[] {
 //                        new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
 //                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
 //                        new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-//                        new Claim("Email", email)
-//                    };
+//                        new Claim("UserId", userData.userId.ToString())
+//            };
+
+//            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+//            var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+//            var token = new JwtSecurityToken(
+//                _configuration["Jwt:Issuer"],
+//                _configuration["Jwt:Audience"],
+//                claims,
+//                expires: DateTime.UtcNow.AddMinutes(10),
+//                signingCredentials: signIn);
 
 
-//                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-//                    var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-//                    var token = new JwtSecurityToken(
-//                        _configuration["Jwt:Issuer"],
-//                        _configuration["Jwt:Audience"],
-//                        claims,
-//                        expires: DateTime.UtcNow.AddDays(7),
-//                        signingCredentials: signIn);
+//            string Token = new JwtSecurityTokenHandler().WriteToken(token);
 
-//                    var query = from user in _context.Users
-//                                join account in _context.Accounts on user.userId equals account.User.userId
-//                                where account.email == email
-//                                select new
-//                                {
-//                                    User = user,
-//                                    Email = account.email,
-//                                    AccessToken = account.accessToken,
-//                                    AccountId = account.accountId
-//                                };
-
-//                    var result = query.FirstOrDefault(); // Lấy kết quả đầu tiên nếu có
-
-//                    if (result != null)
-//                    {
-//                        // Truy cập dữ liệu từ các thuộc tính result tại đây
-//                        int userId = result.User.userId;
-//                        string email = result.Email;
-//                        string accessToken = result.AccessToken;
-//                        int accountId = result.AccountId;
-
-//                        // Xử lý dữ liệu ở đây
-//                    }
-
-//                    _userData.AccessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-//                    return Ok(_userData);
-//                }
-//            }
-//            else
-//            {
-//                return BadRequest("No Data Posted");
-//            }
+//            return Token;
 //        }
 
-
-
-//    }
-//}
-//using CSDL.AppModel;
-//using CSDL.Models;
-//using Microsoft.AspNetCore.Http;
-//using Microsoft.AspNetCore.Mvc;
-//using Microsoft.Extensions.Configuration;
-//using Microsoft.IdentityModel.Tokens;
-//using System;
-//using System.IdentityModel.Tokens.Jwt;
-//using System.Linq;
-//using System.Security.Claims;
-//using System.Text;
-//using System.Threading.Tasks;
-
-//namespace CSDL.Controllers
-//{
-//    [ApiController]
-//    public class LoginController : ControllerBase
-//    {
-//        ApplicationDbContext _context;
-//        IConfiguration _configuration;
-
-//        public LoginController(ApplicationDbContext context, IConfiguration configuration)
+//        [HttpPost("verify")]
+//        public async Task<IActionResult> Verify(string token)
 //        {
-//            _context = context;
-//            _configuration = configuration;
-//        }
+//            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.verificationToken == token);
+//            if (account == null)
+//            {
+//                return BadRequest("Invalid token.");
+//            }
 
-//        [HttpPost]
-//        [Route("PostLoginDetails")]
-//        public async Task<IActionResult> PostLoginDetails(string email, string password)
+//            account.verifiedAt = DateTime.Now;
+//            await _context.SaveChangesAsync();
+
+//            return Ok("User verified! :)");
+//        }
+//        [HttpPost("forgot-password")]
+//        public async Task<IActionResult> ForgotPassword(string email)
 //        {
-//            if (email != null && password != null)
+//            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.email == email);
+//            if (account == null)
 //            {
-//                var resultLoginCheck = _context.Accounts
-//                    .Where(e => e.email == email && e.password == password)
-//                    .FirstOrDefault();
-//                if (resultLoginCheck == null)
-//                {
-//                    return BadRequest("Invalid Credentials");
-//                }
-//                else
-//                {
-//                    var claims = new[]
-//                    {
-//                        new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
-//                        new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-//                        new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString()),
-//                        new Claim("Email", email.ToString())
-                       
-//                    };
-
-
-//                    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-//                    var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-//                    var token = new JwtSecurityToken(
-//                        _configuration["Jwt:Issuer"],
-//                        _configuration["Jwt:Audience"],
-//                        claims,
-//                        expires: DateTime.UtcNow.AddDays(7),
-//                        signingCredentials: signIn);
-
-
-                   
-//                    var query = from user in _context.Users
-//                                join account in _context.Accounts on user.userId equals account.User.userId
-//                                where account.email == email
-//                                select new
-//                                {
-//                                    User = user,
-//                                    Email = account.email,
-//                                    AccessToken = account.accessToken,
-//                                    AccountId = account.accountId
-//                                };
-
-//                    var result = query.FirstOrDefault(); // Lấy kết quả đầu tiên nếu có
-
-//                    if (result != null)
-//                    {
-//                        // Truy cập dữ liệu từ các thuộc tính result tại đây
-//                        int userId = result.User.userId;
-//                        string userEmail = result.Email;
-//                        string accessToken = new JwtSecurityTokenHandler().WriteToken(token);
-
-
-//                        // Tạo đối tượng để chứa thông tin người dùng và token
-//                        var userData = new
-//                        {
-//                            UserId = userId,
-//                            Email = userEmail,
-//                            AccessToken = accessToken,
-//                        };
-
-//                        // Trả về thông tin người dùng và token trong phản hồi
-//                        return Ok(userData);
-//                    }
-//                    else
-//                    {
-//                        return BadRequest("User not found");
-//                    }
-//                }
+//                return BadRequest("User not found.");
 //            }
-//            else
+
+//            account.passwordResetToken = CreateRandomToken();
+//            account.ResetTokenExpires = DateTime.Now.AddDays(1);
+//            await _context.SaveChangesAsync();
+
+//            return Ok("You may now reset your password.");
+//        }
+//        [HttpPost("reset-password")]
+//        public async Task<IActionResult> ResettPassword(ResetPassword request)
+//        {
+//            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.passwordResetToken == request.token);
+//            if (account == null || account.ResetTokenExpires < DateTime.Now)
 //            {
-//                return BadRequest("No Data Posted");
+//                return BadRequest("Invalid Token.");
+//            }
+
+//            CreatePasswordHash(request.password, out byte[] passwordHash, out byte[] passwordSalt);
+
+//            account.passwordHash = passwordHash;
+//            account.passwordSalt = passwordSalt;
+//            account.passwordResetToken = null;
+//            account.ResetTokenExpires = null;
+
+//            await _context.SaveChangesAsync();
+
+//            return Ok("Password successfully reset.");
+//        }
+
+
+
+//        private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
+//        {
+//            using (var hmac = new HMACSHA512(passwordSalt))
+//            {
+//                var computedHash = hmac
+//                    .ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+//                return computedHash.SequenceEqual(passwordHash);
 //            }
 //        }
+//        private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+//        {
+//            using (var hmac = new HMACSHA512())
+//            {
+//                passwordSalt = hmac.Key;
+//                passwordHash = hmac
+//                    .ComputeHash(System.Text.Encoding.UTF8.GetBytes(password));
+//            }
+//        }
+//        private string CreateRandomToken()
+//        {
+//            return Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
+//        }
+
+
+
 //    }
 //}
 

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CSDL.Models
+namespace CSDL.DTO
 {
     public class UserInfo
     {
@@ -14,5 +14,6 @@ namespace CSDL.Models
         public string? lastName { get; set; }
         public string? firstName { get; set; }
         public string? location { get; set; }
+        public string? accessToken { get; set; }
     }
 }

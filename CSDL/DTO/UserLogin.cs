@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CSDL.Models
+namespace CSDL.DTO
 {
     public class UserLogin
     {

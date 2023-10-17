@@ -8,7 +8,7 @@ namespace CSDL.Models
     {
         [Key]
         public int matchId { get; set; } 
-        public DateTime? time { get; set; }
+        public string time { get; set; }
 
 
         public int UserId { get; set; } // This is the foreign key
@@ -18,6 +18,8 @@ namespace CSDL.Models
         public int TargetUserId { get; set; }
         [JsonIgnore]// This is the foreign key to the target user
         public User TargetUser { get; set; }
+
+        public bool IsMatch { get; set; }
 
     }
 }

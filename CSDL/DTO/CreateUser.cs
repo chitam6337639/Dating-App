@@ -1,4 +1,4 @@
-﻿namespace CSDL.Models
+﻿namespace CSDL.DTO
 {
     public class CreateUser
     {

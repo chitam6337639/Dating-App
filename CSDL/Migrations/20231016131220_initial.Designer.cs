@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CSDL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230926074749_initial")]
+    [Migration("20231016131220_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -173,6 +173,32 @@ namespace CSDL.Migrations
                     b.ToTable("Messages");
                 });
 
+            modelBuilder.Entity("CSDL.Models.Relation", b =>
+                {
+                    b.Property<int>("relationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("relationId"), 1L, 1);
+
+                    b.Property<int>("OtherUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("isLike")
+                        .HasColumnType("bit");
+
+                    b.HasKey("relationId");
+
+                    b.HasIndex("OtherUserId");
+
+                    b.HasIndex("UserID");
+
+                    b.ToTable("Relations");
+                });
+
             modelBuilder.Entity("CSDL.Models.User", b =>
                 {
                     b.Property<int>("userId")
@@ -182,6 +208,9 @@ namespace CSDL.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("userId"), 1L, 1);
 
                     b.Property<string>("ImageURL")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("accessToken")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("accountId")
@@ -282,6 +311,25 @@ namespace CSDL.Migrations
                     b.Navigation("UserTo");
                 });
 
+            modelBuilder.Entity("CSDL.Models.Relation", b =>
+                {
+                    b.HasOne("CSDL.Models.User", "OtherUser")
+                        .WithMany("OtherUserRelations")
+                        .HasForeignKey("OtherUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CSDL.Models.User", "User")
+                        .WithMany("UserRelations")
+                        .HasForeignKey("UserID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("OtherUser");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("CSDL.Models.User", b =>
                 {
                     b.HasOne("CSDL.Models.Account", "Account")
@@ -302,6 +350,10 @@ namespace CSDL.Migrations
                     b.Navigation("Matches");
 
                     b.Navigation("Messages");
+
+                    b.Navigation("OtherUserRelations");
+
+                    b.Navigation("UserRelations");
                 });
 #pragma warning restore 612, 618
         }

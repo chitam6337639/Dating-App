@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CSDL.Models
+namespace CSDL.DTO
 {
-    public class UserRegister
+    public class ResetPassword
     {
-        [Required, EmailAddress]
-        public string email { get; set; } = string.Empty;
+        [Required]
+        public string token { get; set; } = string.Empty;
         [Required, MinLength(6, ErrorMessage = "Please enter at least 6 characters, dude!")]
         public string password { get; set; } = string.Empty;
         [Required, Compare("password")]
         public string confirmPassword { get; set; } = string.Empty;
+
     }
 }
