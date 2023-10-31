@@ -47,13 +47,13 @@ namespace CSDL.Models
 
             modelBuilder.Entity<Message>()
            .HasOne(m => m.UserTo) // Thay vì UserIdTo, sử dụng UserTo làm navigation property
-           .WithMany(u => u.Messages) // Chỉ định navigation property trong User
+           .WithMany(u => u.UserMessages) // Chỉ định navigation property trong User
            .HasForeignKey(m => m.UserIdTo)
            .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Message>()
                 .HasOne(m => m.UserFrom)
-                .WithMany()
+                .WithMany(u => u.OtherUserMessages)
                 .HasForeignKey(m => m.UserIdFrom) 
                 .OnDelete(DeleteBehavior.Restrict);
 

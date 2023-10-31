@@ -173,66 +173,6 @@ namespace CSDL.Controllers
             return CreatedAtAction("CreateUser", new { id = newUser.userId }, user);
         }
 
-        //[HttpPost("like-or-dislike")]
-        //[Authorize]
-        //public IActionResult LikeOrDislikeUser([FromBody] LikeDislikeRequestDto request)
-        //{
-        //    try
-        //    {
-        //        var accountIdClaim = User.FindFirst("AccountId");
-        //        if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int currentAccountId))
-        //        {
-        //            return Unauthorized("Token không hợp lệ.");
-        //        }
-
-        //        var currentUser = _context.Users.FirstOrDefault(u => u.accountId == currentAccountId);
-        //        if (currentUser == null)
-        //        {
-        //            return NotFound("Không tìm thấy người dùng.");
-        //        }
-
-        //        var otherUser = _context.Users.FirstOrDefault(u => u.userId == request.otherUserId);
-        //        if (otherUser == null)
-        //        {
-        //            return NotFound("Có lỗi rồi hihi");
-        //        }
-
-        //        // Kiểm tra xem đã tồn tại mối quan hệ giữa người dùng hiện tại và người dùng khác hay chưa
-        //        var relation = _context.Relations.FirstOrDefault(r => r.UserID == currentUser.userId && r.OtherUserId == otherUser.userId);
-
-        //        if (relation == null)
-        //        {
-        //            var newRelation = new Relation
-        //            {
-        //                UserID = currentUser.userId,
-        //                OtherUserId = otherUser.userId,
-        //                isLike = request.isLike
-        //            };
-        //            _context.Relations.Add(newRelation);
-        //            _context.SaveChanges();
-
-        //            return Ok(request.isLike ? "Đã like người dùng thành công." : "Đã dislike người dùng thành công.");
-        //        }
-        //        else
-        //        {
-        //            relation.isLike = request.isLike;
-        //            _context.SaveChanges();
-
-        //            return Ok(request.isLike ? "Đã like người dùng thành công." : "Đã dislike người dùng thành công.");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Ghi log thông tin lỗi, bao gồm Inner Exception
-        //        Console.WriteLine("Lỗi: " + ex.Message);
-        //        if (ex.InnerException != null)
-        //        {
-        //            Console.WriteLine("Inner Exception: " + ex.InnerException.Message);
-        //        }
-
-        //        return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
-        //    }
-        //}
 
         [HttpPost("like-or-dislike")]
         [Authorize]
@@ -309,10 +249,9 @@ namespace CSDL.Controllers
             }
         }
 
-
-        [HttpPost("check-match")]
+        [HttpPost("send-message")]
         [Authorize]
-        public IActionResult CheckMatch([FromBody] MatchRequestDto request)
+        public async Task<IActionResult> SendMessage(MessageDto messageRequest)
         {
             try
             {
@@ -322,50 +261,31 @@ namespace CSDL.Controllers
                     return Unauthorized("Token không hợp lệ.");
                 }
 
-                var currentUser = _context.Users.FirstOrDefault(u => u.accountId == currentAccountId);
+                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.accountId == currentAccountId);
                 if (currentUser == null)
                 {
                     return NotFound("Không tìm thấy người dùng.");
                 }
 
-                var otherUser = _context.Users.FirstOrDefault(u => u.userId == request.OtherUserId);
+                var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.userId == messageRequest.OtherUserId);
                 if (otherUser == null)
                 {
                     return NotFound("Người dùng khác không tồn tại.");
                 }
 
-                // Kiểm tra xem đã tồn tại mối quan hệ Match giữa người dùng hiện tại và người dùng khác hay chưa
-                var existingMatch = _context.Matches.FirstOrDefault(m =>
-                    (m.UserId == currentUser.userId && m.TargetUserId == otherUser.userId) ||
-                    (m.UserId == otherUser.userId && m.TargetUserId == currentUser.userId));
-
-                if (existingMatch == null)
+                var message = new Message
                 {
-                    // Nếu chưa tồn tại mối quan hệ Match, thêm mối quan hệ mới
-                    var newMatch = new Match
-                    {
-                        UserId = currentUser.userId,
-                        TargetUserId = otherUser.userId,
-                        time = request.time,
-                        IsMatch = false // Khởi tạo với giá trị IsMatch là false
-                    };
-                    _context.Matches.Add(newMatch);
-                    _context.SaveChanges();
+                    content = messageRequest.Content,
+                    timeSent = DateTime.Now,
+                    status = "sent", // Có thể thay đổi theo nhu cầu của bạn
+                    UserTo = otherUser,
+                    UserFrom = currentUser
+                };
 
-                    return Ok("Chưa có match giữa hai người dùng.");
-                }
-                else
-                {
-                    // Nếu mối quan hệ Match đã tồn tại, kiểm tra xem IsMatch có phải là true hay không
-                    if (existingMatch.IsMatch)
-                    {
-                        return Ok("Hai người dùng đã match.");
-                    }
-                    else
-                    {
-                        return Ok("Chưa có match giữa hai người dùng.");
-                    }
-                }
+                _context.Messages.Add(message);
+                await _context.SaveChangesAsync();
+
+                return Ok("Tin nhắn đã được gửi.");
             }
             catch (Exception ex)
             {
@@ -379,70 +299,8 @@ namespace CSDL.Controllers
                 return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
             }
         }
-        //[HttpPost("DislikeUser/{dislikedUserId}")]
-        //[Authorize] // Yêu cầu xác thực bằng JWT Token
-        //public async Task<IActionResult> DislikeUser(int dislikedUserId)
-        //{
-        //    try
-        //    {
-        //        // Lấy thông tin người dùng hiện tại từ JWT Token
-        //        var accountIdClaim = User.FindFirst("AccountId");
-        //        if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int currentAccountId))
-        //        {
-        //            return Unauthorized("Token không hợp lệ.");
-        //        }
 
-        //        // Tìm người dùng hiện tại dựa trên accountId
-        //        var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.accountId == currentAccountId);
-        //        if (currentUser == null)
-        //        {
-        //            return NotFound("Không tìm thấy người dùng.");
-        //        }
 
-        //        // Kiểm tra xem đã tồn tại mối quan hệ DislikedUser giữa người dùng hiện tại và dislikedUserId hay chưa
-        //        var existingUserDislikedRelation = await _context.UserDislikedRelations
-        //            .FirstOrDefaultAsync(udr => udr.UserID == currentUser.userId && udr.DislikedUserID == dislikedUserId);
-
-        //        if (existingUserDislikedRelation == null)
-        //        {
-        //            // Nếu chưa tồn tại mối quan hệ DislikedUser, thêm mối quan hệ mới
-        //            var userDislikedRelation = new UserDislikedRelation
-        //            {
-        //                UserID = currentUser.userId,
-        //                DislikedUserID = dislikedUserId
-        //            };
-        //            _context.UserDislikedRelations.Add(userDislikedRelation);
-
-        //            // Kiểm tra xem dislikedUserId đã tồn tại trong bảng DislikedUsers hay chưa
-        //            var existingDislikedUser = await _context.DislikedUsers
-        //                .FirstOrDefaultAsync(du => du.dislikedUserId == dislikedUserId);
-
-        //            if (existingDislikedUser == null)
-        //            {
-        //                // Nếu dislikedUserId chưa tồn tại, thêm dislikedUserId vào bảng DislikedUsers
-        //                var dislikedUser = new DislikedUser
-        //                {
-        //                    dislikedUserId = dislikedUserId
-        //                };
-        //                _context.DislikedUsers.Add(dislikedUser);
-        //            }
-
-        //            await _context.SaveChangesAsync();
-
-        //            return Ok("Đã dislike người dùng thành công.");
-        //        }
-        //        else
-        //        {
-        //            // Nếu đã tồn tại mối quan hệ DislikedUser, trả về thông báo lỗi
-        //            return BadRequest("Người dùng đã bị dislike trước đó.");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Log hoặc hiển thị thông báo lỗi cụ thể
-        //        return StatusCode(500, $"Lỗi: {ex.Message}");
-        //    }
-        //}
 
         [HttpPut("update-image-url/{id}")]
         public async Task<IActionResult> UpdateImageUrl(int id, [FromBody] string imageUrl)
@@ -528,6 +386,93 @@ namespace CSDL.Controllers
 
             return Ok(randomUsers);
         }
+
+        [HttpGet("get-messages")]
+        [Authorize]
+        public async Task<IActionResult> GetMessages(int otherUserId)
+        {
+            try
+            {
+                var accountIdClaim = User.FindFirst("AccountId");
+                if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int currentAccountId))
+                {
+                    return Unauthorized("Token không hợp lệ.");
+                }
+
+                var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.accountId == currentAccountId);
+                if (currentUser == null)
+                {
+                    return NotFound("Không tìm thấy người dùng.");
+                }
+
+                var otherUser = await _context.Users.FirstOrDefaultAsync(u => u.userId == otherUserId);
+                if (otherUser == null)
+                {
+                    return NotFound("Người dùng khác không tồn tại.");
+                }
+
+                var messages = await _context.Messages
+                    .Where(m =>
+                        (m.UserIdFrom == currentUser.userId && m.UserIdTo == otherUser.userId) ||
+                        (m.UserIdFrom == otherUser.userId && m.UserIdTo == currentUser.userId))
+                    .OrderBy(m => m.timeSent)
+                    .ToListAsync();
+
+                return Ok(messages);
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi
+                Console.WriteLine("Lỗi: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("Inner Exception: " + ex.InnerException.Message);
+                }
+
+                return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
+            }
+        }
+        [HttpGet("matched-users")]
+        [Authorize]
+        public async Task<IActionResult> GetMatchedUsers()
+        {
+            try
+            {
+                var accountIdClaim = User.FindFirst("AccountId");
+                if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int currentAccountId))
+                {
+                    return Unauthorized("Token không hợp lệ.");
+                }
+
+                // Lấy danh sách các người dùng đã "match" với người dùng hiện tại
+                var matchedUserIds = await _context.Relations
+                    .Where(r => r.UserID == currentAccountId && r.isMatch)
+                    .Select(r => r.OtherUserId)
+                    .ToListAsync();
+
+                // Lấy thông tin chi tiết của các người dùng đã "match"
+                var matchedUsers = await _context.Users
+                    .Where(u => matchedUserIds.Contains(u.userId))
+                    .ToListAsync();
+
+                return Ok(matchedUsers);
+            }
+            catch (Exception ex)
+            {
+                // Xử lý lỗi
+                Console.WriteLine("Lỗi: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("Inner Exception: " + ex.InnerException.Message);
+                }
+
+                return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
+            }
+        }
+
+
+
+
 
 
         private bool UserExists(int id)

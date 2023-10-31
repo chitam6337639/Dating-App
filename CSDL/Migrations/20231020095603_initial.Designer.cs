@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CSDL.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20231016131220_initial")]
+    [Migration("20231020095603_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -123,14 +123,18 @@ namespace CSDL.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("matchId"), 1L, 1);
 
+                    b.Property<bool>("IsMatch")
+                        .HasColumnType("bit");
+
                     b.Property<int>("TargetUserId")
                         .HasColumnType("int");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("time")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("time")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("matchId");
 
@@ -188,6 +192,9 @@ namespace CSDL.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("isLike")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("isMatch")
                         .HasColumnType("bit");
 
                     b.HasKey("relationId");
@@ -295,13 +302,13 @@ namespace CSDL.Migrations
             modelBuilder.Entity("CSDL.Models.Message", b =>
                 {
                     b.HasOne("CSDL.Models.User", "UserFrom")
-                        .WithMany()
+                        .WithMany("OtherUserMessages")
                         .HasForeignKey("UserIdFrom")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("CSDL.Models.User", "UserTo")
-                        .WithMany("Messages")
+                        .WithMany("UserMessages")
                         .HasForeignKey("UserIdTo")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -349,9 +356,11 @@ namespace CSDL.Migrations
 
                     b.Navigation("Matches");
 
-                    b.Navigation("Messages");
+                    b.Navigation("OtherUserMessages");
 
                     b.Navigation("OtherUserRelations");
+
+                    b.Navigation("UserMessages");
 
                     b.Navigation("UserRelations");
                 });

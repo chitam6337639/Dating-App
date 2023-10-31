@@ -16,12 +16,12 @@ namespace CSDL.Models
         public int UserIdTo { get; set; } // This is the foreign key
         [ForeignKey("UserIdTo")]
         [JsonIgnore]
-        public User UserTo { get; set; } // This is the navigation property to User
+        public virtual User UserTo { get; set; } // This is the navigation property to User
 
         
         public int UserIdFrom { get; set; } // This is the foreign key
         [ForeignKey("UserIdFrom")]
         [JsonIgnore]
-        public User UserFrom { get; set; } 
+        public virtual User UserFrom { get; set; } 
     }
 }

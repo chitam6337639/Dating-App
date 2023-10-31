@@ -23,7 +23,8 @@ namespace CSDL.Models
         public ICollection<History>? Histories { get; set; }
         public ICollection<Image>? Images { get; set; }
         public ICollection<Match>? Matches { get; set; }
-        public ICollection<Message>? Messages { get; set; }
+        public ICollection<Message> UserMessages { get; set; }
+        public ICollection<Message> OtherUserMessages { get; set; }
         public ICollection<Relation> UserRelations { get; set; }
 
         public ICollection<Relation> OtherUserRelations { get; set; }

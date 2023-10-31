@@ -300,13 +300,13 @@ namespace CSDL.Migrations
             modelBuilder.Entity("CSDL.Models.Message", b =>
                 {
                     b.HasOne("CSDL.Models.User", "UserFrom")
-                        .WithMany()
+                        .WithMany("OtherUserMessages")
                         .HasForeignKey("UserIdFrom")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("CSDL.Models.User", "UserTo")
-                        .WithMany("Messages")
+                        .WithMany("UserMessages")
                         .HasForeignKey("UserIdTo")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -354,9 +354,11 @@ namespace CSDL.Migrations
 
                     b.Navigation("Matches");
 
-                    b.Navigation("Messages");
+                    b.Navigation("OtherUserMessages");
 
                     b.Navigation("OtherUserRelations");
+
+                    b.Navigation("UserMessages");
 
                     b.Navigation("UserRelations");
                 });

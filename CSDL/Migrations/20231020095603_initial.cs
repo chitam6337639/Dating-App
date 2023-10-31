@@ -82,9 +82,10 @@ namespace CSDL.Migrations
                 {
                     matchId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    time = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    time = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserId = table.Column<int>(type: "int", nullable: false),
-                    TargetUserId = table.Column<int>(type: "int", nullable: false)
+                    TargetUserId = table.Column<int>(type: "int", nullable: false),
+                    IsMatch = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -140,7 +141,8 @@ namespace CSDL.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserID = table.Column<int>(type: "int", nullable: false),
                     OtherUserId = table.Column<int>(type: "int", nullable: false),
-                    isLike = table.Column<bool>(type: "bit", nullable: false)
+                    isLike = table.Column<bool>(type: "bit", nullable: false),
+                    isMatch = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
