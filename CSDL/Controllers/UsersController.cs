@@ -79,24 +79,30 @@ namespace CSDL.Controllers
                 user.accessToken = token;
                 await _context.SaveChangesAsync();
 
-                var userInfo = new UserInfo
+
+                var response = new
                 {
-                    userId = user.userId,
-                    gender = user.gender,
-                    ImageURL = user.ImageURL,
-                    bio = user.bio,
-                    birthday = user.birthday,
-                    lastName = user.lastName,
-                    firstName = user.firstName,
-                    location = user.location,
-                    accessToken = user.accessToken
+                    accountId = account.accountId, // Thêm accountId vào phản hồi
+                    userInfo = new UserInfo
+                    {
+                        userId = user.userId,
+                        gender = user.gender,
+                        ImageURL = user.ImageURL,
+                        bio = user.bio,
+                        birthday = user.birthday,
+                        lastName = user.lastName,
+                        firstName = user.firstName,
+                        location = user.location,
+                        accessToken = user.accessToken
+                    }
                 };
 
-                return Ok(userInfo);
+                return Ok(response);
             }
 
-            return BadRequest("User information not found.");
+            return Ok(new { accountId = account.accountId,status = account.status });
         }
+
 
         [HttpPost("verify")]
         public async Task<IActionResult> Verify(string token)
@@ -375,6 +381,31 @@ namespace CSDL.Controllers
             return NoContent();
         }
 
+        [HttpPut("update-status")]
+        public async Task<IActionResult> UpdateAccountStatus(int accountId)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.accountId == accountId);
+
+            if (account == null)
+            {
+                return NotFound("Account not found.");
+            }
+
+            account.status = "oldUser";
+
+            // Kiểm tra xem trạng thái đã được cập nhật thành công hay chưa
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok($"Account status updated to: oldUser");
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                return StatusCode(500, "Đã xảy ra lỗi trong quá trình cập nhật trạng thái.");
+            }
+        }
+
+
         [HttpGet("randomusers")]
         public async Task<IActionResult> GetRandomUsers()
         {
@@ -470,8 +501,38 @@ namespace CSDL.Controllers
             }
         }
 
+        [HttpGet("get-user/{accountId}")]
+        public async Task<IActionResult> GetUser(int accountId)
+        {
+            var account = await _context.Accounts.FirstOrDefaultAsync(u => u.accountId == accountId);
+            if (account == null)
+            {
+                return NotFound("Account not found.");
+            }
 
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.accountId == account.accountId);
+            if (user == null)
+            {
+                return NotFound("User not found for the provided accountId.");
+            }
 
+            var accessToken = user.accessToken;
+
+            var userInfo = new UserInfo
+            {
+                userId = user.userId,
+                gender = user.gender,
+                ImageURL = user.ImageURL,
+                bio = user.bio,
+                birthday = user.birthday,
+                lastName = user.lastName,
+                firstName = user.firstName,
+                location = user.location,
+                accessToken = accessToken,
+            };
+
+            return Ok(userInfo);
+        }
 
 
 
@@ -511,6 +572,7 @@ namespace CSDL.Controllers
             var claims = new[]
             {
                 new Claim("AccountId", account.accountId.ToString()),
+                //new Claim("Status", account.status),
                 new Claim(ClaimTypes.Email, account.email),
                 // Add additional claims as needed
             };
