@@ -162,6 +162,12 @@ namespace CSDL.Controllers
             {
                 return BadRequest(ModelState);
             }
+            var account = await _context.Accounts.FirstOrDefaultAsync(a => a.accountId == user.accountId);
+            if (account == null)
+            {
+                return NotFound("Account not found.");
+            }
+
 
             var newUser = new User
             {
@@ -172,11 +178,23 @@ namespace CSDL.Controllers
                 birthday = user.birthday,
                 location = user.location
             };
+            newUser.accessToken = GenerateJwtToken(account);
 
             _context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("CreateUser", new { id = newUser.userId }, user);
+            var response = new
+            {
+                accountId = newUser.accountId,
+                gender = newUser.gender,
+                lastName = newUser.lastName,
+                firstName = newUser.firstName,
+                birthday = newUser.birthday,
+                location = newUser.location,
+                accessToken = newUser.accessToken
+            };
+
+            return CreatedAtAction("CreateUser", new { id = newUser.userId }, response);
         }
 
 
