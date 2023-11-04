@@ -595,7 +595,7 @@ namespace CSDL.Controllers
                 return Unauthorized("Token không hợp lệ.");
             }
 
-            // Lấy tin nhắn cuối cùng giữa người dùng hiện tại và otherUserId
+            // Lấy tin nhắn cuối cùng giữa 2 người dùng
             var latestMessage = _context.Messages
                 .Where(m => (m.UserIdFrom == currentAccountId && m.UserIdTo == otherUserId) || (m.UserIdFrom == otherUserId && m.UserIdTo == currentAccountId))
                 .OrderByDescending(m => m.timeSent)
@@ -606,12 +606,11 @@ namespace CSDL.Controllers
                 return NotFound("Không có tin nhắn nào giữa hai người dùng.");
             }
 
-            // Trả về content, timeSent và UserId của người gửi tin nhắn cuối cùng
             var response = new
             {
                 content = latestMessage.content,
                 timeSent = latestMessage.timeSent,
-                userId = latestMessage.UserIdFrom // UserId của người gửi tin nhắn cuối cùng
+                userId = latestMessage.UserIdFrom // UserId của người gửi cuối cùng
             };
 
             return Ok(response);
