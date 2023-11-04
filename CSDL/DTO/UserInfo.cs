@@ -9,7 +9,6 @@ namespace CSDL.DTO
         public string gender { get; set; }
         public string? ImageURL { get; set; }
         public string? bio { get; set; }
-
         public DateTime? birthday { get; set; }
         public string? lastName { get; set; }
         public string? firstName { get; set; }

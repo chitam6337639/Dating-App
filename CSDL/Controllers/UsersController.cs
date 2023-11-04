@@ -19,7 +19,7 @@ namespace CSDL.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IConfiguration _configuration;// Đảm bảo thay thế "YourDbContext" bằng tên DbContext thực sự của bạn.
+        private readonly IConfiguration _configuration;
 
         public UsersController(ApplicationDbContext context, IConfiguration configuration)
         {
@@ -82,7 +82,7 @@ namespace CSDL.Controllers
 
                 var response = new
                 {
-                    accountId = account.accountId, // Thêm accountId vào phản hồi
+                    accountId = account.accountId, // Thêm accountId
                     userInfo = new UserInfo
                     {
                         userId = user.userId,
@@ -133,6 +133,7 @@ namespace CSDL.Controllers
 
             return Ok("You may now reset your password.");
         }
+
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResettPassword(ResetPassword request)
         {
@@ -170,7 +171,6 @@ namespace CSDL.Controllers
                 firstName = user.firstName,
                 birthday = user.birthday,
                 location = user.location
-                // Assign other properties as needed
             };
 
             _context.Users.Add(newUser);
@@ -244,7 +244,6 @@ namespace CSDL.Controllers
             }
             catch (Exception ex)
             {
-                // Ghi log thông tin lỗi, bao gồm Inner Exception
                 Console.WriteLine("Lỗi: " + ex.Message);
                 if (ex.InnerException != null)
                 {
@@ -283,7 +282,7 @@ namespace CSDL.Controllers
                 {
                     content = messageRequest.Content,
                     timeSent = DateTime.Now,
-                    status = "sent", // Có thể thay đổi theo nhu cầu của bạn
+                    status = "sent", 
                     UserTo = otherUser,
                     UserFrom = currentUser
                 };
@@ -295,7 +294,6 @@ namespace CSDL.Controllers
             }
             catch (Exception ex)
             {
-                // Ghi log thông tin lỗi, bao gồm Inner Exception
                 Console.WriteLine("Lỗi: " + ex.Message);
                 if (ex.InnerException != null)
                 {
@@ -354,8 +352,6 @@ namespace CSDL.Controllers
             {
                 return NotFound();
             }
-
-            // Cập nhật thông tin người dùng
             existingUser.gender = updatedUser.gender;
             existingUser.birthday = updatedUser.birthday;
             existingUser.lastName = updatedUser.lastName;
@@ -453,7 +449,6 @@ namespace CSDL.Controllers
             }
             catch (Exception ex)
             {
-                // Xử lý lỗi
                 Console.WriteLine("Lỗi: " + ex.Message);
                 if (ex.InnerException != null)
                 {
@@ -463,6 +458,7 @@ namespace CSDL.Controllers
                 return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
             }
         }
+
         [HttpGet("matched-users")]
         [Authorize]
         public async Task<IActionResult> GetMatchedUsers()
@@ -490,7 +486,6 @@ namespace CSDL.Controllers
             }
             catch (Exception ex)
             {
-                // Xử lý lỗi
                 Console.WriteLine("Lỗi: " + ex.Message);
                 if (ex.InnerException != null)
                 {
@@ -534,14 +529,10 @@ namespace CSDL.Controllers
             return Ok(userInfo);
         }
 
-
-
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.userId == id);
         }
-
-
 
 
         private bool VerifyPasswordHash(string password, byte[] passwordHash, byte[] passwordSalt)
