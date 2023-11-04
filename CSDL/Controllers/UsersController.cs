@@ -547,6 +547,77 @@ namespace CSDL.Controllers
             return Ok(userInfo);
         }
 
+        //[HttpGet("latest-message/{user1Id}/{user2Id}")]
+        //[Authorize]
+        //public IActionResult GetLatestMessage(int user1Id, int user2Id)
+        //{
+        //    var accountIdClaim = User.FindFirst("AccountId");
+        //    if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int currentAccountId))
+        //    {
+        //        return Unauthorized("Token không hợp lệ.");
+        //    }
+
+        //    // Kiểm tra xem user1Id hoặc user2Id có khớp với accountId hiện tại hay không
+        //    if (user1Id != currentAccountId && user2Id != currentAccountId)
+        //    {
+        //        return Unauthorized("Không có quyền truy cập tin nhắn này.");
+        //    }
+
+        //    // Lấy tin nhắn cuối cùng giữa hai người dùng
+        //    var latestMessage = _context.Messages
+        //        .Where(m => (m.UserIdFrom == user1Id && m.UserIdTo == user2Id) || (m.UserIdFrom == user2Id && m.UserIdTo == user1Id))
+        //        .OrderByDescending(m => m.timeSent)
+        //        .FirstOrDefault();
+
+        //    if (latestMessage == null)
+        //    {
+        //        return NotFound("Không có tin nhắn nào giữa hai người dùng.");
+        //    }
+
+        //    // Trả về content, timeSent và UserId của người gửi tin nhắn cuối cùng
+        //    var response = new
+        //    {
+        //        content = latestMessage.content,
+        //        timeSent = latestMessage.timeSent,
+        //        userId = latestMessage.UserIdFrom // UserId của người gửi tin nhắn cuối cùng
+        //    };
+
+        //    return Ok(response);
+        //}
+
+        [HttpGet("latest-message/{otherUserId}")]
+        [Authorize]
+        public IActionResult GetLatestMessage(int otherUserId)
+        {
+            var accountIdClaim = User.FindFirst("AccountId");
+            if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int currentAccountId))
+            {
+                return Unauthorized("Token không hợp lệ.");
+            }
+
+            // Lấy tin nhắn cuối cùng giữa người dùng hiện tại và otherUserId
+            var latestMessage = _context.Messages
+                .Where(m => (m.UserIdFrom == currentAccountId && m.UserIdTo == otherUserId) || (m.UserIdFrom == otherUserId && m.UserIdTo == currentAccountId))
+                .OrderByDescending(m => m.timeSent)
+                .FirstOrDefault();
+
+            if (latestMessage == null)
+            {
+                return NotFound("Không có tin nhắn nào giữa hai người dùng.");
+            }
+
+            // Trả về content, timeSent và UserId của người gửi tin nhắn cuối cùng
+            var response = new
+            {
+                content = latestMessage.content,
+                timeSent = latestMessage.timeSent,
+                userId = latestMessage.UserIdFrom // UserId của người gửi tin nhắn cuối cùng
+            };
+
+            return Ok(response);
+        }
+
+
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.userId == id);
