@@ -616,6 +616,139 @@ namespace CSDL.Controllers
             return Ok(response);
         }
 
+        //[HttpGet("matched-users-with-latest-message")]
+        //[Authorize]
+        //public async Task<IActionResult> GetMatchedUsersWithLatestMessage()
+        //{
+        //    var accountIdClaim = User.FindFirst("AccountId");
+        //    if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int currentAccountId))
+        //    {
+        //        return Unauthorized("Token không hợp lệ.");
+        //    }
+
+        //    // Lấy danh sách các người dùng đã "match" với người dùng hiện tại
+        //    var matchedUserIds = await _context.Relations
+        //        .Where(r => r.UserID == currentAccountId && r.isMatch)
+        //        .Select(r => r.OtherUserId)
+        //        .ToListAsync();
+
+        //    // Lấy thông tin chi tiết của các người dùng đã "match"
+        //    var matchedUsers = await _context.Users
+        //        .Where(u => matchedUserIds.Contains(u.userId))
+        //        .ToListAsync();
+
+        //    // Lấy tin nhắn mới nhất cho mỗi người dùng đã "match"
+        //    var latestMessages = new List<LatestMessageDTO>();
+        //    foreach (var otherUser in matchedUsers)
+        //    {
+        //        var latestMessage = _context.Messages
+        //            .Where(m => (m.UserIdFrom == currentAccountId && m.UserIdTo == otherUser.userId) || (m.UserIdFrom == otherUser.userId && m.UserIdTo == currentAccountId))
+        //            .OrderByDescending(m => m.timeSent)
+        //            .FirstOrDefault();
+
+        //        var latestMessageDTO = new LatestMessageDTO
+        //        {
+        //            UserId = otherUser.userId,
+        //            LatestMessageContent = latestMessage?.content,
+        //            LatestMessageTimeSent = latestMessage?.timeSent
+        //        };
+
+        //        latestMessages.Add(latestMessageDTO);
+        //    }
+
+        //    // Trả về danh sách các người dùng đã "match" cùng với tin nhắn mới nhất
+        //    var response = new
+        //    {
+        //        MatchedUsers = matchedUsers,
+        //        LatestMessages = latestMessages
+        //    };
+
+        //    return Ok(response);
+        //}
+        [HttpGet("matched-users-with-latest-message")]
+        [Authorize]
+        public async Task<IActionResult> GetMatchedUsersWithLatestMessage()
+        {
+            try
+            {
+                var accountIdClaim = User.FindFirst("AccountId");
+                if (accountIdClaim == null || !int.TryParse(accountIdClaim.Value, out int currentAccountId))
+                {
+                    return Unauthorized("Token không hợp lệ.");
+                }
+
+                // Lấy danh sách các người dùng đã "match" với người dùng hiện tại
+                var matchedUserIds = await _context.Relations
+                    .Where(r => r.UserID == currentAccountId && r.isMatch)
+                    .Select(r => r.OtherUserId)
+                    .ToListAsync();
+
+                // Lấy thông tin chi tiết của các người dùng đã "match"
+                var matchedUsers = await _context.Users
+                    .Where(u => matchedUserIds.Contains(u.userId))
+                    .ToListAsync();
+
+                // Tạo một danh sách để lưu trữ thông tin về người dùng đã "match"
+                var matchedUsersWithLatestMessages = new List<MatchedUserWithLatestMessageDTO>();
+                foreach (var otherUser in matchedUsers)
+                {
+                    var latestMessage = _context.Messages
+                        .Where(m => (m.UserIdFrom == currentAccountId && m.UserIdTo == otherUser.userId) || (m.UserIdFrom == otherUser.userId && m.UserIdTo == currentAccountId))
+                        .OrderByDescending(m => m.timeSent)
+                        .FirstOrDefault();
+
+                    // Lấy UserId của người gửi tin nhắn cuối cùng
+                    int? latestMessageUserIdFrom = null;
+                    if (latestMessage != null)
+                    {
+                        latestMessageUserIdFrom = latestMessage.UserIdFrom;
+                    }
+
+                    // Tạo một đối tượng DTO cho thông tin người dùng đã "match"
+                    var matchedUserWithLatestMessage = new MatchedUserWithLatestMessageDTO
+                    {
+                        UserId = otherUser.userId,
+                        LatestMessageContent = latestMessage?.content,
+                        LatestMessageTimeSent = latestMessage?.timeSent,
+                        LatestMessageUserIdFrom = latestMessageUserIdFrom,
+                        Gender = otherUser.gender,
+                        ImageURL = otherUser.ImageURL,
+                        Bio = otherUser.bio,
+                        Birthday = otherUser.birthday,
+                        LastName = otherUser.lastName,
+                        FirstName = otherUser.firstName,
+                        Location = otherUser.location,
+                        AccessToken = otherUser.accessToken
+                    };
+
+                    matchedUsersWithLatestMessages.Add(matchedUserWithLatestMessage);
+                }
+
+                return Ok(matchedUsersWithLatestMessages);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi: " + ex.Message);
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine("Inner Exception: " + ex.InnerException.Message);
+                }
+
+                return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý yêu cầu.");
+            }
+        }
+    
+
+
+
+
+
+
+
+
+
+
+
 
         private bool UserExists(int id)
         {
