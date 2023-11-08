@@ -2,17 +2,17 @@
 {
     public class MatchedUserWithLatestMessageDTO
     {
-        public int UserId { get; set; }
-        public string LatestMessageContent { get; set; }
-        public DateTime? LatestMessageTimeSent { get; set; }
-        public int? LatestMessageUserIdFrom { get; set; }
-        public string Gender { get; set; }
-        public string ImageURL { get; set; }
-        public string Bio { get; set; }
-        public DateTime? Birthday { get; set; }
-        public string LastName { get; set; }
-        public string FirstName { get; set; }
-        public string Location { get; set; }
-        public string AccessToken { get; set; }
+        public int userId { get; set; }
+        public string latestMessageContent { get; set; }
+        public DateTime? latestMessageTimeSent { get; set; }
+        public int? latestMessageUserIdFrom { get; set; }
+        public string gender { get; set; }
+        public string imageURL { get; set; }
+        public string bio { get; set; }
+        public DateTime? birthday { get; set; }
+        public string lastName { get; set; }
+        public string firstName { get; set; }
+        public string location { get; set; }
+        public string accessToken { get; set; }
     }
 }

@@ -707,18 +707,18 @@ namespace CSDL.Controllers
                     // Tạo một đối tượng DTO cho thông tin người dùng đã "match"
                     var matchedUserWithLatestMessage = new MatchedUserWithLatestMessageDTO
                     {
-                        UserId = otherUser.userId,
-                        LatestMessageContent = latestMessage?.content,
-                        LatestMessageTimeSent = latestMessage?.timeSent,
-                        LatestMessageUserIdFrom = latestMessageUserIdFrom,
-                        Gender = otherUser.gender,
-                        ImageURL = otherUser.ImageURL,
-                        Bio = otherUser.bio,
-                        Birthday = otherUser.birthday,
-                        LastName = otherUser.lastName,
-                        FirstName = otherUser.firstName,
-                        Location = otherUser.location,
-                        AccessToken = otherUser.accessToken
+                        userId = otherUser.userId,
+                        latestMessageContent = latestMessage?.content,
+                        latestMessageTimeSent = latestMessage?.timeSent,
+                        latestMessageUserIdFrom = latestMessageUserIdFrom,
+                        gender = otherUser.gender,
+                        imageURL = otherUser.ImageURL,
+                        bio = otherUser.bio,
+                        birthday = otherUser.birthday,
+                        lastName = otherUser.lastName,
+                        firstName = otherUser.firstName,
+                        location = otherUser.location,
+                        accessToken = otherUser.accessToken
                     };
 
                     matchedUsersWithLatestMessages.Add(matchedUserWithLatestMessage);
