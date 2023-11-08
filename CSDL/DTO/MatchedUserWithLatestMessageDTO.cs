@@ -3,6 +3,7 @@
     public class MatchedUserWithLatestMessageDTO
     {
         public int userId { get; set; }
+        public int accountId { get; set; }
         public string latestMessageContent { get; set; }
         public DateTime? latestMessageTimeSent { get; set; }
         public int? latestMessageUserIdFrom { get; set; }
