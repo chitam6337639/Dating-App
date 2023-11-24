@@ -1,4 +1,5 @@
-﻿using CSDL.DTO;
+﻿using CSDL.AppModel;
+using CSDL.DTO;
 using CSDL.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -190,6 +191,7 @@ namespace CSDL.Controllers
                 matchedLikedDislikedUsers.Add(currentAccountId);
 
                 var unmatchedUsers = await _context.Users
+                    .Include(u => u.Account)  // Sử dụng Include để load Account
                     .Where(u => !matchedLikedDislikedUsers.Contains(u.userId))
                     .ToListAsync();
 
@@ -204,7 +206,7 @@ namespace CSDL.Controllers
                     .Select(u => new
                     {
                         userId = u.userId,
-                        //accountId = u.Account.accountId,
+                        UserAccountId = u.Account?.accountId, 
                         gender = u.gender,
                         imageURL = u.ImageURL,
                         bio = u.bio,
@@ -246,5 +248,6 @@ namespace CSDL.Controllers
 
             return null;
         }
+
     }
 }
