@@ -127,22 +127,6 @@ namespace CSDL.Controllers
                 return StatusCode(500, "Đã xảy ra lỗi trong quá trình cập nhật trạng thái.");
             }
         }
-
-
-        [HttpGet("randomusers")]
-        public async Task<IActionResult> GetRandomUsers()
-        {
-            // Sử dụng hàm NEWID() trong truy vấn SQL để lấy ngẫu nhiên
-            var randomUsers = await _context.Users
-                .OrderBy(u => Guid.NewGuid())
-                .Take(3)
-                .ToListAsync();
-
-            return Ok(randomUsers);
-        }
-
-        
-
         
 
         [HttpGet("get-user/{accountId}")]
