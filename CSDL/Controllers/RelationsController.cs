@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace CSDL.Controllers
@@ -171,6 +172,7 @@ namespace CSDL.Controllers
             }
         }
 
+
         [HttpGet("random-unmatched-users")]
         [Authorize]
         public async Task<IActionResult> GetRandomUnmatchedUsers()
@@ -190,15 +192,16 @@ namespace CSDL.Controllers
 
                 matchedLikedDislikedUsers.Add(currentAccountId);
 
+                // Lấy danh sách người dùng chưa từng được lấy và chưa từng bị loại trước đó.
                 var unmatchedUsers = await _context.Users
-                    .Include(u => u.Account)  // Sử dụng Include để load Account
+                    .Include(u => u.Account)
                     .Where(u => !matchedLikedDislikedUsers.Contains(u.userId))
                     .ToListAsync();
 
-                if (unmatchedUsers.Count < 3)
-                {
-                    return NotFound("Không đủ người dùng chưa từng match, like, dislike để lấy.");
-                }
+                //if (unmatchedUsers.Count < 3)
+                //{
+                //    return NotFound("Không đủ người dùng chưa từng match, like, dislike để lấy.");
+                //}
 
                 var randomUnmatchedUsersWithAge = unmatchedUsers
                     .OrderBy(u => Guid.NewGuid())
@@ -206,7 +209,7 @@ namespace CSDL.Controllers
                     .Select(u => new
                     {
                         userId = u.userId,
-                        UserAccountId = u.Account?.accountId, 
+                        UserAccountId = u.Account?.accountId,
                         gender = u.gender,
                         imageURL = u.ImageURL,
                         bio = u.bio,
@@ -248,6 +251,7 @@ namespace CSDL.Controllers
 
             return null;
         }
+
 
     }
 }
