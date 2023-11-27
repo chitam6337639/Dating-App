@@ -32,6 +32,9 @@ namespace CSDL.Models
         {
 
             //    // Cấu hình mối quan hệ giữa các lớp ở đây
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.accountId)
+                .IsUnique();
 
             modelBuilder.Entity<Match>()
                .HasOne(m => m.User)

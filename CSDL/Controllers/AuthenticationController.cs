@@ -232,6 +232,7 @@ namespace CSDL.Controllers
 
             return CreatedAtAction("CreateUser", new { id = newUser.userId }, response);
         }
+
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.userId == id);

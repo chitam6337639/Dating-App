@@ -12,8 +12,7 @@ using System.IO;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-
-
+using System.Text.Json;
 
 namespace CSDL.Controllers
 {
@@ -34,8 +33,13 @@ namespace CSDL.Controllers
 
 
         [HttpPut("update-image-url/{id}")]
-        public async Task<IActionResult> UpdateImageUrl(int id, [FromBody] string imageUrl)
+        public async Task<IActionResult> UpdateImageUrl(int id, [FromBody] ImageURL imageURL)
         {
+            if (imageURL == null)
+            {
+                return BadRequest("Invalid data format.");
+            }
+
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
@@ -43,7 +47,7 @@ namespace CSDL.Controllers
                 return NotFound("User not found.");
             }
 
-            user.ImageURL = imageUrl;
+            user.ImageURL = imageURL.ImageUrl;
             await _context.SaveChangesAsync();
 
             return Ok("Image URL updated successfully.");
@@ -65,25 +69,61 @@ namespace CSDL.Controllers
             return Ok("Bio updated successfully.");
         }
 
-        [HttpPut("update-user/{id}")]
-        public async Task<IActionResult> UpdateInfoUser(int id, UserInfo updatedUser)
-        {
-            if (id != updatedUser.userId)
-            {
-                return BadRequest();
-            }
+        //[HttpPut("update-user/{id}")]
+        //public async Task<IActionResult> UpdateInfoUser(int id, UserInfo updatedUser)
+        //{
+        //    if (id != updatedUser.userId)
+        //    {
+        //        return BadRequest();
+        //    }
 
+        //    var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.userId == id);
+
+        //    if (existingUser == null)
+        //    {
+        //        return NotFound();
+        //    }
+        //    existingUser.gender = updatedUser.gender;
+        //    existingUser.birthday = updatedUser.birthday;
+        //    existingUser.lastName = updatedUser.lastName;
+        //    existingUser.firstName = updatedUser.firstName;
+        //    existingUser.location = updatedUser.location;
+
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!UserExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
+
+        //    return NoContent();
+        //}
+
+        [HttpPut("update-user/{id}")]
+        public async Task<IActionResult> UpdateInfoUser(int id, [FromBody] UserUpdate userUpdate)
+        {
             var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.userId == id);
 
             if (existingUser == null)
             {
                 return NotFound();
             }
-            existingUser.gender = updatedUser.gender;
-            existingUser.birthday = updatedUser.birthday;
-            existingUser.lastName = updatedUser.lastName;
-            existingUser.firstName = updatedUser.firstName;
-            existingUser.location = updatedUser.location;
+
+            // Cập nhật chỉ những trường bạn quan tâm
+            existingUser.gender = userUpdate.gender;
+            existingUser.birthday = userUpdate.birthday;
+            existingUser.lastName = userUpdate.lastName;
+            existingUser.firstName = userUpdate.firstName;
+            existingUser.location = userUpdate.location;
 
             try
             {
@@ -103,6 +143,9 @@ namespace CSDL.Controllers
 
             return NoContent();
         }
+
+
+
 
         [HttpPut("update-status")]
         public async Task<IActionResult> UpdateAccountStatus(int accountId)
@@ -127,7 +170,9 @@ namespace CSDL.Controllers
                 return StatusCode(500, "Đã xảy ra lỗi trong quá trình cập nhật trạng thái.");
             }
         }
-        
+
+       
+
 
         [HttpGet("get-user/{accountId}")]
         public async Task<IActionResult> GetUser(int accountId)

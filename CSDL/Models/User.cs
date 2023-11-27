@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -28,8 +29,6 @@ namespace CSDL.Models
         public ICollection<Relation> UserRelations { get; set; }
 
         public ICollection<Relation> OtherUserRelations { get; set; }
-
-
 
 
         public int? accountId { get; set; }
