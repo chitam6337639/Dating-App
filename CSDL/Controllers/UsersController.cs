@@ -54,7 +54,7 @@ namespace CSDL.Controllers
         }
 
         [HttpPut("update-bio/{id}")]
-        public async Task<IActionResult> UpdateBio(int id, [FromBody] string bio)
+        public async Task<IActionResult> UpdateBio(int id, [FromBody] BioUpdate bio)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -63,7 +63,7 @@ namespace CSDL.Controllers
                 return NotFound("User not found.");
             }
 
-            user.bio = bio;
+            user.bio = bio.Bio;
             await _context.SaveChangesAsync();
 
             return Ok("Bio updated successfully.");

@@ -115,10 +115,16 @@ namespace CSDL.Controllers
                 user.accessToken = token;
                 await _context.SaveChangesAsync();
 
+                //check age
+                int? userAge = null;
+                if (user.birthday != null)
+                {
+                    userAge = CalculateAge(user.birthday);
+                }
 
                 var response = new
                 {
-                    accountId = account.accountId, // Thêm accountId
+                    accountId = account.accountId,
                     userInfo = new UserInfo
                     {
                         userId = user.userId,
@@ -126,6 +132,7 @@ namespace CSDL.Controllers
                         ImageURL = user.ImageURL,
                         bio = user.bio,
                         birthday = user.birthday,
+                        age = userAge,
                         lastName = user.lastName,
                         firstName = user.firstName,
                         location = user.location,
@@ -138,6 +145,7 @@ namespace CSDL.Controllers
 
             return Ok(new { accountId = account.accountId, status = account.status });
         }
+
 
 
         [HttpPost("verify")]
@@ -305,6 +313,29 @@ namespace CSDL.Controllers
         {
             return email.EndsWith("@" + domain);
         }
+        public static int? CalculateAge(DateTime? birthday)
+        {
+            if (birthday.HasValue)
+            {
+                var today = DateTime.Today;
+                var age = today.Year - birthday.Value.Year;
+
+                if (birthday.Value > today.AddYears(-age))
+                {
+                    age--;
+                }
+
+                return age;
+            }
+
+            return null;
+        }
+
+
+
+
+
+
 
     }
 }

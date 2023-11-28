@@ -10,6 +10,7 @@ namespace CSDL.DTO
         public string? ImageURL { get; set; }
         public string? bio { get; set; }
         public DateTime? birthday { get; set; }
+        public int? age { get; set; }
         public string? lastName { get; set; }
         public string? firstName { get; set; }
         public string? location { get; set; }
