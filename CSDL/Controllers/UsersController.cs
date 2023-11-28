@@ -190,6 +190,11 @@ namespace CSDL.Controllers
             }
 
             var accessToken = user.accessToken;
+            int? userAge = null;
+            if (user.birthday != null)
+            {
+                userAge = CalculateAge(user.birthday);
+            }
 
             var userInfo = new UserInfo
             {
@@ -198,6 +203,7 @@ namespace CSDL.Controllers
                 ImageURL = user.ImageURL,
                 bio = user.bio,
                 birthday = user.birthday,
+                age = userAge,
                 lastName = user.lastName,
                 firstName = user.firstName,
                 location = user.location,
@@ -286,6 +292,27 @@ namespace CSDL.Controllers
         private bool UserExists(int id)
         {
             return _context.Users.Any(e => e.userId == id);
+        }
+        private bool IsEmailInDomain(string email, string domain)
+        {
+            return email.EndsWith("@" + domain);
+        }
+        public static int? CalculateAge(DateTime? birthday)
+        {
+            if (birthday.HasValue)
+            {
+                var today = DateTime.Today;
+                var age = today.Year - birthday.Value.Year;
+
+                if (birthday.Value > today.AddYears(-age))
+                {
+                    age--;
+                }
+
+                return age;
+            }
+
+            return null;
         }
 
 
