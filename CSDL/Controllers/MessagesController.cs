@@ -153,9 +153,11 @@ namespace CSDL.Controllers
                     return Unauthorized("Token không hợp lệ.");
                 }
 
+                var currentUser = _context.Users.FirstOrDefault(u => u.accountId == currentAccountId);
+
                 // Lấy danh sách các người dùng đã "match" với người dùng hiện tại
                 var matchedUserIds = await _context.Relations
-                    .Where(r => r.UserID == currentAccountId && r.isMatch)
+                    .Where(r => r.UserID == currentUser.userId && r.isMatch)
                     .Select(r => r.OtherUserId)
                     .ToListAsync();
 
@@ -169,7 +171,7 @@ namespace CSDL.Controllers
                 foreach (var otherUser in matchedUsers)
                 {
                     var latestMessage = await _context.Messages
-                        .Where(m => (m.UserIdFrom == currentAccountId && m.UserIdTo == otherUser.userId) || (m.UserIdFrom == otherUser.userId && m.UserIdTo == currentAccountId))
+                        .Where(m => (m.UserIdFrom == currentUser.userId && m.UserIdTo == otherUser.userId) || (m.UserIdFrom == otherUser.userId && m.UserIdTo == currentUser.userId))
                         .OrderByDescending(m => m.timeSent)
                         .FirstOrDefaultAsync();
 

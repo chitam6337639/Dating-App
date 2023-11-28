@@ -149,8 +149,10 @@ namespace CSDL.Controllers
                     return Unauthorized("Token không hợp lệ.");
                 }
 
+                var currentUser = _context.Users.FirstOrDefault(u => u.accountId == currentAccountId);
+
                 var matchedUserIds = await _context.Relations
-                    .Where(r => r.UserID == currentAccountId && r.isMatch)
+                    .Where(r => r.UserID == currentUser.userId && r.isMatch)
                     .Select(r => r.OtherUserId)
                     .ToListAsync();
 
