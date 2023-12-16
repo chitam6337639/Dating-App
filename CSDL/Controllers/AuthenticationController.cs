@@ -88,6 +88,59 @@ namespace CSDL.Controllers
 
             return Ok("User successfully created!");
         }
+        //[HttpPost("register")]
+        //public async Task<IActionResult> Register(UserRegister request)
+        //{
+        //    // Kiểm tra xem địa chỉ email có đúng định dạng không
+        //    if (!IsValidEmail(request.email))
+        //    {
+        //        return BadRequest("Invalid email format.");
+        //    }
+
+        //    // Kiểm tra xem địa chỉ email có thuộc tên miền cụ thể không
+        //    string allowedDomain = "sinhvien.hoasen.edu.vn";
+        //    if (!IsEmailInDomain(request.email, allowedDomain))
+        //    {
+        //        return BadRequest("Invalid email domain.");
+        //    }
+
+        //    // Kiểm tra xem người dùng đã tồn tại hay chưa
+        //    var existingAccount = await _context.Accounts.FirstOrDefaultAsync(u => u.email == request.email);
+        //    if (existingAccount != null)
+        //    {
+        //        // Automatically verify the user if the email is not duplicated
+        //        if (existingAccount.verifiedAt == null)
+        //        {
+        //            existingAccount.verifiedAt = DateTime.Now;
+        //            await _context.SaveChangesAsync();
+        //            return Ok("User automatically verified!");
+        //        }
+        //        else
+        //        {
+        //            return BadRequest("User already exists.");
+        //        }
+        //    }
+
+        //    // Tiếp tục với quá trình đăng ký nếu thông tin hợp lệ
+        //    CreatePasswordHash(request.password,
+        //        out byte[] passwordHash,
+        //        out byte[] passwordSalt);
+
+        //    var Account = new Account
+        //    {
+        //        email = request.email,
+        //        passwordHash = passwordHash,
+        //        passwordSalt = passwordSalt,
+        //        verificationToken = CreateRandomToken(),
+        //        status = "newUser"
+        //    };
+
+        //    _context.Accounts.Add(Account);
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok("User successfully created!");
+        //}
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserLogin request)
@@ -103,9 +156,14 @@ namespace CSDL.Controllers
                 return BadRequest("Password is incorrect.");
             }
 
+            //if (account.verifiedAt == null)
+            //{
+            //    return BadRequest("Not verified!");
+            //}
             if (account.verifiedAt == null)
             {
-                return BadRequest("Not verified!");
+                account.verifiedAt = DateTime.Now;
+                await _context.SaveChangesAsync();
             }
             var token = GenerateJwtToken(account);
 
